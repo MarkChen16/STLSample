@@ -10,19 +10,19 @@
 using namespace std;
 
 /*
-计数排序; 以出现的总数对数据排序；
-复杂度：O(n)
+计数排序; 以计数的方式对数据排序；适用于数值不大，重复比较多的数据；
+时间复杂度：O(n)
 */
 
 int main()
 {
 	//准备数据
 	vector<int> lstData;
-	int intN = 100;
-
+	int intN = 10000;
+	
 	for (int i = 0; i < intN; i++)
 	{
-		lstData.push_back(rand() % intN);
+		lstData.push_back(rand() % 100);
 	}
 	
 	//空间换时间

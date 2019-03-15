@@ -19,11 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{647A1CE1-7D5F-4AF2-A97D-C8D8D5005ED2}</ProjectGuid>
+    <ProjectGuid>{E4F22ADB-CC93-4765-A1B8-502FD6B5FAE5}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>BucketSortDemo</RootNamespace>
+    <RootNamespace>BubbleSortDemo</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
-    <ProjectName>3.1BucketSortDemo</ProjectName>
+    <ProjectName>2.1BubbleSortDemo</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -150,7 +150,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BucketSortDemo.cpp" />
+    <ClCompile Include="BubbleSortDemo.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
