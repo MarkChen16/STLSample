@@ -1,10 +1,11 @@
-// BubbleSortDemo.cpp : 定义控制台应用程序的入口点。
+// SelectionSortDemo.cpp : 定义控制台应用程序的入口点。
 //
 
 #include "stdafx.h"
 
+
 /*
-冒泡排序：O(N*N)
+选择排序：O(N*N)
 
 */
 
@@ -16,25 +17,31 @@ void swap(T &a, T &b)
 	b = tmp;
 }
 
-//一次冒泡
-void bubble(int arr[], int n)
+//一次选择
+int indexOfMax(int arr[], int n)
 {
-	for (int j = 0; j < n - 1; j++)
+	int maxIndex = 0;
+
+	for (int i = 1; i < n; i++)
 	{
-		//大的数值往后移
-		if (arr[j] > arr[j + 1])
+		if (arr[i] > arr[maxIndex])
 		{
-			swap(arr[j], arr[j + 1]);
+			maxIndex = i;
 		}
 	}
+
+	return maxIndex;
 }
 
-//冒泡排序
-void BubbleSort(int arr[], int n)
+
+void SelectionSort(int arr[], int n)
 {
 	for (int i = 0; i < n; i++)
 	{
-		bubble(arr, n - i);
+		int indexMax = indexOfMax(arr, n - i);
+		
+		//把最大的值放在后面
+		swap(arr[indexMax], arr[n - i - 1]);
 	}
 }
 
@@ -53,8 +60,8 @@ int main()
 	}
 	printf("\n");
 
-	BubbleSort(arr, sz);
-	
+	SelectionSort(arr, sz);
+
 	printf("进行排序之后：");
 	for (i = 0; i<9; i++)
 	{

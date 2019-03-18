@@ -15,7 +15,7 @@ void QuickSort(int arr[], int left, int right)
 
 	if (i >= j) return;
 
-	//第一个为中间数
+	//取第一个为中间数
 	int tmp = arr[i];
 
 	while (i < j)
@@ -37,13 +37,6 @@ void QuickSort(int arr[], int left, int right)
 
 	//赋值中间数
 	arr[i] = tmp;
-
-	//中间结果
-	for (int t = 0; t<9; t++)
-	{
-		printf("%d ", arr[t]);
-	}
-	printf("\n");
 
 	QuickSort(arr, left, i - 1);	//递归中间数左边的元素
 	QuickSort(arr, j + 1, right);	//递归中间数右边的元素
