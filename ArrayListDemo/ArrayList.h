@@ -24,7 +24,7 @@ class ArrayList;
 template<class T>
 class arraylist_iterator;
 
-
+//重载标准输出流的<<操作符
 template<class T>
 ostream & operator << (ostream &out, ArrayList<T> &arr)
 {
@@ -38,21 +38,17 @@ ostream & operator << (ostream &out, ArrayList<T> &arr)
 	return out;
 }
 
-
-template<class T>
-T & operator -(int intStep, const arraylist_iterator<T> &iter)
+//全局友元操作符重载函数，常数为左操作数必须用友元
+template<class VT>
+arraylist_iterator<VT> operator -(int intStep, const arraylist_iterator<VT> &iter)
 {
-	T *ptrRev = iter._ptr - intStep;
-
-	return *ptrRev;
+	return arraylist_iterator<VT>(iter._ptr - intStep);
 }
 
-template<class T>
-T & operator +(int intStep, const arraylist_iterator<T> &iter)
+template<class VT>
+arraylist_iterator<VT> operator +(int intStep, const arraylist_iterator<VT> &iter)
 {
-	T *ptrRev = iter._ptr + intStep;
-
-	return *ptrRev;
+	return arraylist_iterator<VT>(iter._ptr + intStep);
 }
 
 //迭代器(随机访问迭代器)===============================================================
@@ -60,11 +56,8 @@ template<class T>
 class arraylist_iterator : public std::iterator<std::random_access_iterator_tag, T>
 {
 public:
-	friend T & operator -(int intStep, const arraylist_iterator<T> &iter);
-	friend T & operator +(int intStep, const arraylist_iterator<T> &iter);
-
 	//构造函数、复制构造函数、析构函数、赋值操作符
-	arraylist_iterator(T* p = nullptr)
+	explicit arraylist_iterator(T* p = nullptr)
 	{
 		_ptr = p;
 	}
@@ -74,11 +67,6 @@ public:
 		_ptr = iter._ptr;
 	}
 
-	~arraylist_iterator()
-	{
-
-	}
-
 	arraylist_iterator & operator = (const arraylist_iterator &iter)
 	{
 		_ptr = iter._ptr;
@@ -86,17 +74,10 @@ public:
 		return *this;
 	}
 
-	//前后移动函数
+	//移动操作
 	arraylist_iterator & operator ++()
 	{
-		_ptr++;
-
-		return *this;
-	}
-
-	arraylist_iterator & operator ++(int)
-	{
-		//后缀++
+		//前缀++，运算后返回本身
 		_ptr++;
 
 		return *this;
@@ -104,37 +85,46 @@ public:
 
 	arraylist_iterator & operator --()
 	{
+		//前缀--
 		_ptr--;
 
 		return *this;
 	}
 
-	arraylist_iterator & operator --(int)
+	arraylist_iterator operator ++(int)
+	{
+		//后缀++，返回新的对象再运算
+		arraylist_iterator iterRev = *this;
+
+		_ptr++;
+
+		return iterRev;
+	}
+
+	arraylist_iterator operator --(int)
 	{
 		//后缀--
+		arraylist_iterator iterRev = *this;
+
 		_ptr--;
 
-		return *this;
+		return iterRev;
+	}
+
+	//两个迭代器的距离
+	int operator -(arraylist_iterator iter)
+	{
+		int intRev = std::distance(iter._ptr, _ptr);
+
+		return intRev;
 	}
 
 	//算术操作(随机访问)
-	T & operator [](int index)
-	{
-		T *ptrRev = _ptr + index;
-
-		return *ptrRev;
-	}
-
 	arraylist_iterator & operator -=(int intStep)
 	{
 		_ptr -= intStep;
 
 		return *this;
-	}
-
-	arraylist_iterator operator -(int intStep)
-	{
-		return arraylist_iterator(_ptr - intStep);
 	}
 
 	arraylist_iterator & operator +=(int intStep)
@@ -144,21 +134,14 @@ public:
 		return *this;
 	}
 
+	arraylist_iterator operator -(int intStep)
+	{
+		return arraylist_iterator(_ptr - intStep);
+	}
+
 	arraylist_iterator operator +(int intStep)
 	{
 		return arraylist_iterator(_ptr + intStep);
-	}
-
-	int operator -(const arraylist_iterator &iter)
-	{
-		if (_ptr < iter._ptr)
-		{
-			return std::distance(_ptr, iter._ptr);
-		}
-		else
-		{
-			return std::distance(iter._ptr, _ptr);
-		}
 	}
 
 	//比较函数
@@ -184,15 +167,24 @@ public:
 
 	bool operator >= (const arraylist_iterator &iter)
 	{
-		return (*this > iter || *this == iter);
+		//return (*this > iter || *this == iter);
+		return (*this >= iter);
 	}
 
 	bool operator <= (const arraylist_iterator &iter)
 	{
-		return (*this < iter || *this == iter);
+		//return (*this < iter || *this == iter);
+		return (*this <= iter);
 	}
 
 	//取值函数
+	T & operator [](int index)
+	{
+		T *ptrRev = _ptr + index;
+
+		return *ptrRev;
+	}
+
 	T & operator *()
 	{
 		return *_ptr;
@@ -205,6 +197,12 @@ public:
 
 private:
 	T* _ptr;
+
+	template<class VT>
+	friend arraylist_iterator<VT> operator -(int intStep, const arraylist_iterator<VT> &iter);
+
+	template<class VT>
+	friend arraylist_iterator<VT> operator +(int intStep, const arraylist_iterator<VT> &iter);
 };
 
 //容器=================================================================================
@@ -213,7 +211,6 @@ class ArrayList
 {
 public:
 	typedef arraylist_iterator<T> iterator;
-	typedef arraylist_iterator<const T> const_iterator;
 
 	ArrayList(int initCapacity = 10)
 	{
@@ -284,10 +281,10 @@ public:
 
 	void erase(iterator begIt, iterator endIt)
 	{
-		for (iterator iter = endIt-1; iter >= begIt; iter--)
+		for (iterator iter = begIt; iter != endIt; iter++)
 		{
-			int i = iter - begin();
-			erase(i);
+			*iter = T();
+			mSize--;
 		}
 	}
 
@@ -348,36 +345,12 @@ public:
 
 	iterator begin()
 	{
-		if (mSize > 0)
-		{
-			return iterator(mArr);
-		}
-		else
-		{
-			return end();
-		}
+		return iterator(mArr);
 	}
 
 	iterator end()
 	{
 		return iterator(mArr + mSize);
-	}
-
-	const_iterator cbegin()
-	{
-		if (mSize > 0)
-		{
-			return const_iterator(mArr);
-		}
-		else
-		{
-			return cend();
-		}
-	}
-
-	const_iterator cend()
-	{
-		return const_iterator(mArr + mSize);
 	}
 
 protected:
