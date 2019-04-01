@@ -23,6 +23,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "2.2SelectionSortDemo", "Sel
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "1.2ArrayListDemo", "ArrayListDemo\ArrayListDemo.vcxproj", "{84B200A4-834B-4020-BD0B-92A3DD1DEA81}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "6.1BinaryTree", "BinaryTree\BinaryTree.vcxproj", "{937EA08D-6CDE-49CF-A9E6-34BA18C53BC9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -109,6 +111,14 @@ Global
 		{84B200A4-834B-4020-BD0B-92A3DD1DEA81}.Release|Win32.Build.0 = Release|Win32
 		{84B200A4-834B-4020-BD0B-92A3DD1DEA81}.Release|x64.ActiveCfg = Release|x64
 		{84B200A4-834B-4020-BD0B-92A3DD1DEA81}.Release|x64.Build.0 = Release|x64
+		{937EA08D-6CDE-49CF-A9E6-34BA18C53BC9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{937EA08D-6CDE-49CF-A9E6-34BA18C53BC9}.Debug|Win32.Build.0 = Debug|Win32
+		{937EA08D-6CDE-49CF-A9E6-34BA18C53BC9}.Debug|x64.ActiveCfg = Debug|x64
+		{937EA08D-6CDE-49CF-A9E6-34BA18C53BC9}.Debug|x64.Build.0 = Debug|x64
+		{937EA08D-6CDE-49CF-A9E6-34BA18C53BC9}.Release|Win32.ActiveCfg = Release|Win32
+		{937EA08D-6CDE-49CF-A9E6-34BA18C53BC9}.Release|Win32.Build.0 = Release|Win32
+		{937EA08D-6CDE-49CF-A9E6-34BA18C53BC9}.Release|x64.ActiveCfg = Release|x64
+		{937EA08D-6CDE-49CF-A9E6-34BA18C53BC9}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
