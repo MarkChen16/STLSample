@@ -23,7 +23,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "2.2SelectionSortDemo", "Sel
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "1.2ArrayListDemo", "ArrayListDemo\ArrayListDemo.vcxproj", "{84B200A4-834B-4020-BD0B-92A3DD1DEA81}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "6.1BinarySortTree", "6.1BinarySortTree\6.1BinarySortTree.vcxproj", "{8FCE11B0-8F6A-43DA-9C5D-1BCCBEC77DBA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "6.2AVLSortTree", "AVLSortTree\AVLSortTree.vcxproj", "{F78A4E22-2AD6-443C-B9C3-43035BEF6134}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BinarySortTree", "BinarySortTree\BinarySortTree.vcxproj", "{8FCE11B0-8F6A-43DA-9C5D-1BCCBEC77DBA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -111,6 +113,14 @@ Global
 		{84B200A4-834B-4020-BD0B-92A3DD1DEA81}.Release|Win32.Build.0 = Release|Win32
 		{84B200A4-834B-4020-BD0B-92A3DD1DEA81}.Release|x64.ActiveCfg = Release|x64
 		{84B200A4-834B-4020-BD0B-92A3DD1DEA81}.Release|x64.Build.0 = Release|x64
+		{F78A4E22-2AD6-443C-B9C3-43035BEF6134}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F78A4E22-2AD6-443C-B9C3-43035BEF6134}.Debug|Win32.Build.0 = Debug|Win32
+		{F78A4E22-2AD6-443C-B9C3-43035BEF6134}.Debug|x64.ActiveCfg = Debug|x64
+		{F78A4E22-2AD6-443C-B9C3-43035BEF6134}.Debug|x64.Build.0 = Debug|x64
+		{F78A4E22-2AD6-443C-B9C3-43035BEF6134}.Release|Win32.ActiveCfg = Release|Win32
+		{F78A4E22-2AD6-443C-B9C3-43035BEF6134}.Release|Win32.Build.0 = Release|Win32
+		{F78A4E22-2AD6-443C-B9C3-43035BEF6134}.Release|x64.ActiveCfg = Release|x64
+		{F78A4E22-2AD6-443C-B9C3-43035BEF6134}.Release|x64.Build.0 = Release|x64
 		{8FCE11B0-8F6A-43DA-9C5D-1BCCBEC77DBA}.Debug|Win32.ActiveCfg = Debug|Win32
 		{8FCE11B0-8F6A-43DA-9C5D-1BCCBEC77DBA}.Debug|Win32.Build.0 = Debug|Win32
 		{8FCE11B0-8F6A-43DA-9C5D-1BCCBEC77DBA}.Debug|x64.ActiveCfg = Debug|x64

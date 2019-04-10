@@ -32,10 +32,10 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="6.1BinarySortTree.cpp">
+    <ClCompile Include="BSTree.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="BSTree.cpp">
+    <ClCompile Include="BinarySortTree.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

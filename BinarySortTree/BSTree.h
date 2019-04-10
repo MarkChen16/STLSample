@@ -50,13 +50,14 @@ public:
 	size_t count();		   //节点数量
 	void print();		   //打印输出
 
-private:
+protected:
 	BSNode<T>* root;	//二叉树的根节点
 	size_t mCount;		//节点的数量
 
+private:
 	deque< BSNode<T>* > layerList;	//层次输出变量
 
-private:
+protected:
 	BSNode<T>* search(BSNode<T>* & p, T key);
 	bool remove(BSNode<T>*  p, T key);
 
@@ -405,11 +406,11 @@ bool BSTree<T>::remove(BSNode<T>* pnode, T key)
 		}
 		else if (key > pnode->value)
 		{
-			remove(pnode->rchild, key);
+			return remove(pnode->rchild, key);
 		}
 		else
 		{
-			remove(pnode->lchild, key);
+			return remove(pnode->lchild, key);
 		}
 	}
 	else

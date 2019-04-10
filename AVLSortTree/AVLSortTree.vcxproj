@@ -19,11 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{937EA08D-6CDE-49CF-A9E6-34BA18C53BC9}</ProjectGuid>
+    <ProjectGuid>{F78A4E22-2AD6-443C-B9C3-43035BEF6134}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>BinaryTree</RootNamespace>
+    <RootNamespace>AVLSortTree</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
-    <ProjectName>6.1BinaryTree</ProjectName>
+    <ProjectName>6.2AVLSortTree</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -146,13 +146,13 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BTNode.h" />
+    <ClInclude Include="AVLTree.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BinaryTree.cpp" />
-    <ClCompile Include="BTNode.cpp" />
+    <ClCompile Include="AVLSortTree.cpp" />
+    <ClCompile Include="AVLTree.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
