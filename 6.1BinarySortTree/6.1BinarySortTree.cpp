@@ -58,11 +58,14 @@ int main()
 
 	cout << "===============================================" << endl;
 	cout << "删除元素99 35 35 95 62" << endl;
-	bst.remove(99);
 	bst.remove(35);
+	bst.remove(99);
 	bst.remove(35);
 	bst.remove(95);
 	bst.remove(62);
+
+	bst.remove(51);
+	bst.remove(47);
 
 	cout << "最大元素:" << bst.search_maximum() << endl;
 	cout << "最小元素:" << bst.search_minimun() << endl;
@@ -78,7 +81,26 @@ int main()
 	cout << "层次遍历：" << endl;
 	bst.layerOrder();
 
-	bst.destory();
+	bst.clear();
+	getchar();
+	return 0;
+
+
+	//插入260万个节点，检查性能
+	for (int i = 0; i < 2600000; i++)
+	{
+		int newKey = rand();
+		bst.insert(newKey);
+	}
+
+	cout << "===============================================" << endl;
+	cout << "最大元素:" << bst.search_maximum() << endl;
+	cout << "最小元素:" << bst.search_minimun() << endl;
+	cout << "节点数量:" << bst.count() << endl;
+	cout << "树的高度:" << bst.height() << endl;
+
+	//cout << "中序遍历：" << endl;
+	//bst.inOrder();
 
 	getchar();
     return 0;

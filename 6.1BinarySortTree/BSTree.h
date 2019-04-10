@@ -10,7 +10,7 @@ using namespace std;
 template <typename T>
 struct BSNode
 {
-	BSNode(T t) : value(t), lchild(nullptr), rchild(nullptr) {}
+	BSNode(T t) : value(t), lchild(nullptr), rchild(nullptr), parent(nullptr){}
 
 	BSNode() = default;
 
@@ -33,8 +33,8 @@ public:
 	void postOrder();    //后序遍历二叉树
 	void layerOrder();    //层次遍历二叉树
 
-	BSNode<T>* search_recursion(T key);        //递归地进行查找
 	BSNode<T>* search_Iterator(T key);        //迭代地进行查找
+	BSNode<T>* search_recursion(T key);        //递归地进行查找
 
 	T search_minimun(); //查找最小元素
 	T search_maximum(); //查找最大元素
@@ -44,7 +44,7 @@ public:
 
 	void insert(T key);    //插入指定值节点
 	bool remove(T key);    //删除指定值节点
-	void destory();        //销毁二叉树
+	void clear();        //销毁二叉树
 
 	size_t height();	   //树的高度
 	size_t count();		   //节点数量
@@ -67,7 +67,7 @@ private:
 
 	T search_minimun(BSNode<T>* p);
 	T search_maximum(BSNode<T>* p);
-	void destory(BSNode<T>* &p);
+	void clear(BSNode<T>* &p);
 
 	size_t height(BSNode<T>* p, size_t h);
 };
@@ -84,7 +84,7 @@ BSTree<T>::BSTree()
 template<typename T>
 BSTree<T>::~BSTree()
 {
-	if (nullptr != root) destory();
+	if (nullptr != root) clear();
 }
 
 /*前序遍历算法*/
@@ -307,22 +307,21 @@ void BSTree<T>::insert(T key)
 		else break;
 	}
 
-	//插入新的叶子节点
+	//插入关键字到叶子节点
 	pnode = new BSNode<T>(key); //以元素的值构建新节点
 
-	if (pparent == nullptr)            //如果是空树
+	//如果是空树
+	if (pparent == nullptr)
 	{
-		root = pnode;                  //则新节点为根
+		root = pnode;  //则新节点为根
 	}
 	else
 	{
-		if (key > pparent->value)
-			pparent->rchild = pnode; //否则新节点为其父节点的左孩
-		else
-			pparent->lchild = pnode; //或右孩
+		if (key > pparent->value) pparent->rchild = pnode; //大于父节点，插入到右孩
+		else pparent->lchild = pnode; //小于相等父节点，插入到左孩
 	}
 
-	pnode->parent = pparent;        //指明新节点的父节点 
+	pnode->parent = pparent;        //指定父节点 
 	mCount++;
 }
 
@@ -342,40 +341,63 @@ bool BSTree<T>::remove(BSNode<T>* pnode, T key)
 		{
 			BSNode<T>* pdel = nullptr;
 
-			if (pnode->lchild == nullptr || pnode->rchild == nullptr)
+			//情况：前驱顶替、独子继承、直接删除
+			if (pnode->lchild != nullptr && pnode->rchild != nullptr)
 			{
-				//情况二、三：被删节点只有左子树或右子树，或没有孩子
+				//情况一：被删节点同时有左右子树，前驱顶替
+				pdel = predecessor(pnode);
+			}
+			else if (pnode->lchild == nullptr && pnode->rchild == nullptr)
+			{
+				//情况二：被删节点没有左右子树，直接删除
 				pdel = pnode;
 			}
 			else
 			{
-				//情况一：被删节点同时有左右子树，则删除该节点的前驱
-				pdel = predecessor(pnode);
+				//情况三：被删节点只有左子树，或者只有右子树，直接删除后独子继承
+				pdel = pnode;
 			}
 
-			//此时，被删节点只有一个孩子（或没有孩子），保存该孩子指针
+			//更改被删节点的孩子节点的父节点=================================================================
+			//此时，被删节点只有左孩或右孩，或者没有孩子，保存该孩子指针
 			BSNode<T>* pchild = nullptr;
-			if (pdel->lchild != nullptr) pchild = pdel->lchild;
-			else pchild = pdel->rchild;
+			if (nullptr != pdel->lchild)
+			{
+				pchild = pdel->lchild;
+			}
+			else if (nullptr != pdel->rchild)
+			{
+				pchild = pdel->rchild;
+			}
 
 			//让孩子指向被删除节点的父节点
-			if (pchild != nullptr) pchild->parent = pdel->parent;
-
-			//如果要删除的节点是头节点，注意更改root的值
-			if (pdel->parent == nullptr) root = pchild;
-
-			//如果要删除的节点不是头节点，要注意更改它的双亲节点指向新的孩子节点
-			else if (pdel->parent->lchild == pdel)
+			if (nullptr != pchild)
 			{
-				pdel->parent->lchild = pchild;
-			}
-			else
-			{
-				pdel->parent->rchild = pchild;
+				pchild->parent = pdel->parent;
 			}
 
+			//更改被删节点的父节点的孩子节点=================================================================
+			BSNode<T>* pdelParent = pdel->parent;
+			if (pdelParent == nullptr)
+			{
+				//如果被删节点是头节点，注意更改root的值
+				root = pchild;
+			}
+			else if (pdelParent->lchild == pdel)
+			{
+				//更改双亲节点指向新的孩子节点
+				pdelParent->lchild = pchild;
+			}
+			else if (pdelParent->rchild == pdel)
+			{
+				//更改双亲节点指向新的孩子节点
+				pdelParent->rchild = pchild;
+			}
+
+			//替换真正删除节点的值=================================================================
 			if (pnode->value != pdel->value) pnode->value = pdel->value;
 
+			//释放被删节点的内存
 			delete pdel;
 			mCount--;
 
@@ -432,19 +454,19 @@ T BSTree<T>::search_maximum(BSNode<T>*p)
 
 /*销毁二叉树*/
 template<typename T>
-void BSTree<T>::destory()
+void BSTree<T>::clear()
 {
-	destory(root);
+	clear(root);
 	mCount = 0;
 }
 
 template <typename T>
-void BSTree<T>::destory(BSNode<T>* &p)
+void BSTree<T>::clear(BSNode<T>* &p)
 {
 	if (p != nullptr)
 	{
-		if (p->lchild != nullptr) destory(p->lchild);
-		if (p->rchild != nullptr) destory(p->rchild);
+		if (p->lchild != nullptr) clear(p->lchild);
+		if (p->rchild != nullptr) clear(p->rchild);
 
 		delete p;
 		p = nullptr;
