@@ -39,8 +39,8 @@ public:
 	T search_minimun(); //查找最小元素
 	T search_maximum(); //查找最大元素
 
-	BSNode<T>* successor(BSNode<T>* x);    //查找指定节点的后继节点
 	BSNode<T>* predecessor(BSNode<T>* x);    //查找指定节点的前驱节点
+	BSNode<T>* successor(BSNode<T>* x);    //查找指定节点的后继节点
 
 	void insert(T key);    //插入指定值节点
 	bool remove(T key);    //删除指定值节点

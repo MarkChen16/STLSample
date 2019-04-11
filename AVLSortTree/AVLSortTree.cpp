@@ -14,10 +14,53 @@ AVL平衡二叉树：
 
 
 #include "stdafx.h"
-
+#include "AVLTree.h"
 
 int main()
 {
+	AVLTree<int> avl;
+	//LL旋转
+	//avl.insert(8);
+	//avl.insert(7);
+	//avl.insert(6);
+
+	//RR旋转
+	//avl.insert(8);
+	//avl.insert(9);
+	//avl.insert(10);
+
+	//RL旋转
+	//avl.insert(8);
+	//avl.insert(10);
+	//avl.insert(9);
+
+	//LR旋转
+	//avl.insert(8);
+	//avl.insert(6);
+	//avl.insert(7);
+
+	for (int i = 0; i < 260000; i++)
+	{
+		int newKey = rand();
+		avl.insert(newKey);
+	}
+
+	avl.insert(8);
+	avl.insert(6);
+	avl.insert(4);
+	avl.insert(9);
+	avl.insert(7);
+	avl.insert(5);
+
+	avl.print();
+
+	avl.remove(6);
+	avl.remove(7);
+	avl.remove(4);
+
+	avl.print();
+
+	getchar();
     return 0;
 }
 
