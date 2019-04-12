@@ -398,6 +398,7 @@ inline void AVLTree<T>::leftBalance(AVLNode<T>*& pNodeA)
 		rotate_R(pNodeA);
 		break;
 	case EH:
+		//不会出现
 		lNode->bf = RH;
 		pNodeA->bf = LH;
 		rotate_R(pNodeA);
@@ -445,6 +446,7 @@ inline void AVLTree<T>::rightBalance(AVLNode<T>*& pNodeA)
 		rotate_L(pNodeA);
 		break;
 	case EH:
+		//不会出现
 		rNode->bf = LH;
 		pNodeA->bf = RH;
 		rotate_L(pNodeA);
