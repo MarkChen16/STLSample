@@ -5,23 +5,23 @@
 
 using namespace std;
 
+#define EH		0	//等高
+#define LH		1	//左高
+#define RH		-1	//右高
 
 //AVL树的节点
 template <typename T>
 struct AVLNode
 {
-	AVLNode(T t) : value(t), lchild(nullptr), rchild(nullptr), height(0) {}
+	AVLNode(T t) : value(t), lchild(nullptr), rchild(nullptr), bf(EH) {}
 
-	AVLNode() = default;
-
-	T value;
-	AVLNode<T>* lchild;
-	AVLNode<T>* rchild;
-
-	int height;		//平衡因子
+	T value;	//节点的值
+	int bf;		//平衡因子
+	AVLNode<T>* lchild;		//左孩
+	AVLNode<T>* rchild;		//右孩
 };
 
-//二叉查找树类
+//AVL树
 template <typename T>
 class AVLTree
 {
@@ -29,34 +29,36 @@ public:
 	AVLTree();
 	~AVLTree();
 
-	AVLNode<T>* search(T key);        //迭代地进行查找
+	AVLNode<T>* search(T key);		//查找指定值的节点
+	bool insert(T key);				//插入指定值的节点
+	bool remove(T key);				//删除指定值的节点
+	void clear();					//清除二叉树
 
-	void insert(T key);		//插入指定值节点
-	void remove(T key);		//删除指定值节点
-	void clear();			//销毁二叉树
-
-	int count();			//树的节点数量
-	void print();			//打印输出
+	int heigh();					//树的高度
+	int count();					//树的节点数量
+	void print();					//打印输出
 
 protected:
 	AVLNode<T>* root;	//二叉树的根节点
-	int intCount;
+	int intCount;		//节点的数量
 
 private:
 
 protected:
-	void insert(AVLNode<T>* &parent, T key);
-	void remove(AVLNode<T>* &pNode, T key);
+	bool insert(AVLNode<T>* &parent, T key, bool &taller);
+	bool remove(AVLNode<T>* &parent, T key, bool &lower);
 	void clear(AVLNode<T>* &p);
 
+	int heigh(AVLNode<T>* p, int intHeigh);
+
+	void preOrder(AVLNode<T>* p);
 	void inOrder(AVLNode<T>* p);
+	void postOrder(AVLNode<T>* p);
 
-	int height(AVLNode<T>* p);
-
-	void rotateLL(AVLNode<T>* &k2);	//在左子树的左子树插入节点时旋转
-	void rotateRR(AVLNode<T>* &k2);	//在右子树的右子树插入节点时旋转
-	void rotateLR(AVLNode<T>* &k2);	//在左子树的右子树插入节点时旋转
-	void rotateRL(AVLNode<T>* &k2);	//在右子树的左子树插入节点时旋转
+	void leftBalance(AVLNode<T>* &pNodeA);		//左平衡
+	void rightBalance(AVLNode<T>* &pNodeA);		//右平衡
+	void rotate_L(AVLNode<T>* &k2);				//向左旋转
+	void rotate_R(AVLNode<T>* &k2);				//向右旋转
 };
 
 template<typename T>
@@ -70,7 +72,6 @@ template<typename T>
 inline AVLTree<T>::~AVLTree()
 {
 	clear(); 
-	intCount = 0;
 }
 
 template<typename T>
@@ -98,21 +99,30 @@ inline AVLNode<T>* AVLTree<T>::search(T key)
 }
 
 template<typename T>
-inline void AVLTree<T>::insert(T key)
+inline bool AVLTree<T>::insert(T key)
 {
-	insert(root, key);
+	bool isTaller = false;
+	return insert(root, key, isTaller);
 }
 
 template<typename T>
-inline void AVLTree<T>::remove(T key)
+inline bool AVLTree<T>::remove(T key)
 {
-	remove(root, key);
+	bool isLower = false;
+	return remove(root, key, isLower);
 }
 
 template<typename T>
 inline void AVLTree<T>::clear()
 {
 	clear(root);
+	intCount = 0;
+}
+
+template<typename T>
+inline int AVLTree<T>::heigh()
+{
+	return heigh(root, 0);
 }
 
 template<typename T>
@@ -124,138 +134,209 @@ inline int AVLTree<T>::count()
 template<typename T>
 inline void AVLTree<T>::print()
 {
-	inOrder(root);
+	preOrder(root);
 	cout << endl;
 }
 
 template<typename T>
-inline void AVLTree<T>::insert(AVLNode<T>* &parent, T key)
+inline bool AVLTree<T>::insert(AVLNode<T>* &parent, T key, bool &taller)
 {
 	if (nullptr == parent)
 	{
-		//插入到叶子节点
+		//找到插入位置
 		parent = new AVLNode<T>(key);
 		intCount++;
-	}
-	else if (key > parent->value)
-	{
-		//在右子树插入
-		insert(parent->rchild, key);
 
-		//插入后判断是否需要旋转
-		if (height(parent->lchild) - height(parent->rchild) == -2)
-		{
-			if (key > parent->rchild->value)
-			{
-				//右子树的右孩
-				rotateRR(parent);
-			}
-			else
-			{
-				//右子树的左孩
-				rotateRL(parent);
-			}
-		}
+		taller = true;
+		return true;
 	}
 	else
 	{
-		//在左子树插入
-		insert(parent->lchild, key);
-
-		//插入后判断是否需要旋转
-		if (height(parent->lchild) - height(parent->rchild) == 2)
+		if (key == parent->value)
 		{
-			if (key <= parent->lchild->value)
+			//如果已经存在
+			taller = false;
+			return false;
+		}
+		else if (key < parent->value)
+		{
+			//在左子树插入
+			if (!insert(parent->lchild, key, taller)) return false;
+
+			if (taller)
 			{
-				//左子树的左孩
-				rotateLL(parent);
+				switch (parent->bf)
+				{
+				case EH:
+					//等高变为左高
+					parent->bf = LH;
+					taller = true;	//继续向上修改父节点的平衡因子
+					break;
+				case LH:
+					//左高需要平衡
+					leftBalance(parent);
+					taller = false;	//平衡之后，不再向上修改父节点的平衡因子
+					break;
+				case RH:
+					//右高变为等高
+					parent->bf = EH;
+					taller = false;	//原来是右高，在左子树插入导入平衡
+					break;
+				}
 			}
-			else
+		}
+		else
+		{
+			//在右子树插入
+			if (!insert(parent->rchild, key, taller)) return false;
+
+			if (taller)
 			{
-				//左子树的右孩
-				rotateLR(parent);
+				switch (parent->bf)
+				{
+				case EH:
+					//等高变为右高
+					parent->bf = RH;
+					taller = true;	//继续向上修改父节点的平衡因子
+					break;
+				case LH:
+					//左高变为等高
+					parent->bf = EH;
+					taller = false;	//原来是左高，在右子树插入导入平衡
+					break;
+				case RH:
+					//右高需要平衡
+					rightBalance(parent);
+					taller = false;	//平衡之后，不再向上修改父节点的平衡因子
+					break;
+				}
 			}
 		}
 	}
 
-	//更新叶子节点上面所有的父节点的平衡因子
-	parent->height = height(parent->lchild) - height(parent->rchild);
+	return true;
 }
 
 template<typename T>
-inline void AVLTree<T>::remove(AVLNode<T>*& pNode, T key)
+inline bool AVLTree<T>::remove(AVLNode<T>* &parent, T key, bool & lower)
 {
-	if (nullptr == pNode)
-	{
-		return;
-	}
-	else if (key > pNode->value)
-	{
-		//在右子树删除孩子
-		remove(pNode->rchild, key);
+	bool isLeft = false, isRight = false;
 
-		//删除之后旋转
-		if (height(pNode->lchild) - height(pNode->rchild) == 2)
-		{
-			if (height(pNode->lchild->lchild) > height(pNode->lchild->rchild))
-			{
-				rotateLL(pNode);
-			}
-			else
-			{
-				rotateLR(pNode);
-			}
-		}
+	if (nullptr == parent)
+	{
+		//没有找到
+		lower = false;
+		return false;
 	}
-	else if (key < pNode->value)
+	else if (key < parent->value)
 	{
 		//在左子树删除孩子
-		remove(pNode->lchild, key);
+		if (!remove(parent->lchild, key, lower)) return false;
 
-		//删除之后旋转
-		if (height(pNode->lchild) - height(pNode->rchild) == -2)
-		{
-			if (height(pNode->rchild->rchild) > height(pNode->rchild->lchild))
-			{
-				rotateRR(pNode);
-			}
-			else
-			{
-				rotateRL(pNode);
-			}
-		}
+		isLeft = true;
 	}
-	else if (key == pNode->value && pNode->lchild != nullptr && pNode->rchild != nullptr)
+	else if (key > parent->value)
 	{
-		//找出前驱
-		AVLNode<T>* parentNode = pNode;
-		AVLNode<T>* preNode = pNode->lchild;
+		//在右子树删除孩子
+		if (!remove(parent->rchild, key, lower)) return false;
 
-		while (nullptr != preNode->rchild)
-		{
-			parentNode = preNode;
-			preNode = preNode->rchild;
-		}
-
-		//前驱替换，删除前驱
-		pNode->value = preNode->value;
-		remove(parentNode, preNode->value);
+		isRight = true;
 	}
 	else
 	{
-		//保存被删节点的孩子节点
-		AVLNode<T>* pChild = pNode->lchild == NULL ? pNode->rchild : pNode->lchild;
+		AVLNode<T> *pDel = nullptr;
 		
-		delete pNode;
-		pNode = pChild;
+		if (nullptr == parent->rchild)
+		{
+			//被删节点的右孩子为空
+			pDel = parent;
+			parent = parent->lchild;
 
-		intCount--;
+			delete pDel;
+			pDel = nullptr;
+
+			intCount--;
+
+			lower = true;
+			return true;
+		}
+		else
+		{
+			//被删节点的右孩子不为空，后继替换
+			AVLNode<T>* parentNode = parent;
+			pDel = parent->rchild;
+
+			while (nullptr != pDel->lchild)
+			{
+				parentNode = pDel;
+				pDel = pDel->lchild;
+			}
+
+			parent->value = pDel->value;
+			if (!remove(parent->rchild, pDel->value, lower)) return false;
+
+			isRight = true;
+		}
 	}
 
-	if (nullptr != pNode)
+	//如果有节点被删除
+	if (lower)
 	{
-		pNode->height = height(pNode->lchild) - height(pNode->rchild);
+		if (isLeft == true)
+		{
+			switch (parent->bf)
+			{
+			case EH:
+				//没删之前EH，删后RH；
+				parent->bf = RH;
+				lower = false;
+				break;
+			case LH:
+				//没删之前LH，删后EH;
+				parent->bf = EH;
+				lower = true;
+				break;
+			case RH:
+				//没删之前RH，删后导致右不平衡
+				rightBalance(parent);
+				lower = false;
+				break;
+			}
+		}
+		else if (isRight == true)
+		{
+			switch (parent->bf)
+			{
+			case EH:
+				//没删之前EH，删后LH；
+				parent->bf = LH;
+				lower = false;
+				break;
+			case LH:
+				//没删之前LH，删后导致左不平衡
+				leftBalance(parent);
+				lower = false;
+				break;
+			case RH:
+				//没删之前RH，删后EH;
+				parent->bf = EH;
+				lower = true;
+				break;
+			}
+		}
 	}
+
+	return true;
+}
+
+template<typename T>
+inline void AVLTree<T>::preOrder(AVLNode<T>* p)
+{
+	if (nullptr == p) return;
+
+	cout << p->value << "(" << p->bf << ")" << " ";
+	inOrder(p->lchild);
+	inOrder(p->rchild);
 }
 
 template<typename T>
@@ -264,8 +345,18 @@ inline void AVLTree<T>::inOrder(AVLNode<T>* p)
 	if (nullptr == p) return;
 
 	inOrder(p->lchild);
-	cout << p->value << "(" << p->height << ")" << " ";
+	cout << p->value << "(" << p->bf << ")" << " ";
 	inOrder(p->rchild);
+}
+
+template<typename T>
+inline void AVLTree<T>::postOrder(AVLNode<T>* p)
+{
+	if (nullptr == p) return;
+
+	inOrder(p->lchild);
+	inOrder(p->rchild);
+	cout << p->value << "(" << p->bf << ")" << " ";
 }
 
 template<typename T>
@@ -281,69 +372,147 @@ inline void AVLTree<T>::clear(AVLNode<T>* &p)
 }
 
 template<typename T>
-inline int AVLTree<T>::height(AVLNode<T>* p)
+inline int AVLTree<T>::heigh(AVLNode<T>* p, int intHeigh)
 {
-	if (nullptr == p)
+	if (nullptr != p) intHeigh++;
+	else return intHeigh;
+
+	int h1 = heigh(p->lchild, intHeigh);
+	int h2 = heigh(p->rchild, intHeigh);
+
+	return h1 > h2 ? h1 : h2;
+}
+
+template<typename T>
+inline void AVLTree<T>::leftBalance(AVLNode<T>*& pNodeA)
+{
+	AVLNode<T>* lNode = nullptr, *lrNode = nullptr;
+
+	lNode = pNodeA->lchild;
+
+	switch (lNode->bf)
 	{
-		return 0;
-	}
-	else
-	{
-		if (p->height > 0)
+	case LH:
+		//LL：旋转一次
+		lNode->bf = pNodeA->bf = EH;
+		rotate_R(pNodeA);
+		break;
+	case EH:
+		lNode->bf = RH;
+		pNodeA->bf = LH;
+		rotate_R(pNodeA);
+		break;
+	case RH:
+		//LR：旋转两次
+		lrNode = lNode->rchild;
+
+		switch (lrNode->bf)
 		{
-			return height(p->lchild) + 1;
-		}
-		else
-		{
-			return height(p->rchild) + 1;
+		case EH:
+			lNode->bf = EH;
+			pNodeA->bf = EH;
+			break;
+		case LH:
+			lNode->bf = EH;
+			pNodeA->bf = RH;
+			break;
+		case RH:
+			lNode->bf = LH;
+			pNodeA->bf = EH;
+			break;
 		}
 
-		//int h1 = height(p->lchild) + 1;
-		//int h2 = height(p->rchild) + 1;
+		lrNode->bf = EH;
+		rotate_L(pNodeA->lchild);
+		rotate_R(pNodeA);
 
-		//return h1 > h2 ? h1 : h2;
+		break;
 	}
 }
 
 template<typename T>
-inline void AVLTree<T>::rotateLL(AVLNode<T>*& k2)
+inline void AVLTree<T>::rightBalance(AVLNode<T>*& pNodeA)
 {
+	AVLNode<T>* rNode = nullptr, *rlNode = nullptr;
+
+	rNode = pNodeA->rchild;
+
+	switch (rNode->bf)
+	{
+	case RH:
+		//RR：旋转一次
+		pNodeA->bf = rNode->bf = EH;
+		rotate_L(pNodeA);
+		break;
+	case EH:
+		rNode->bf = LH;
+		pNodeA->bf = RH;
+		rotate_L(pNodeA);
+		break;
+	case LH:
+		//RL：旋转两次
+		rlNode = rNode->lchild;
+		switch (rlNode->bf)
+		{
+		case EH:
+			rNode->bf = EH;
+			pNodeA->bf = EH;
+			break;
+		case LH:
+			rNode->bf = RH;
+			pNodeA->bf = EH;
+			break;
+		case RH:
+			rNode->bf = EH;
+			pNodeA->bf = LH;
+			break;
+		}
+
+		rlNode->bf = EH;
+		rotate_R(pNodeA->rchild);
+		rotate_L(pNodeA);
+
+		break;
+	}
+}
+
+template<typename T>
+inline void AVLTree<T>::rotate_L(AVLNode<T>*& k2)
+{
+	/*
+	向左旋转
+			k2
+				\
+				 k1
+					\
+					new
+
+	*/
+
+	AVLNode<T>* k1 = k2->rchild;
+
+	k2->rchild = k1->lchild;
+	k1->lchild = k2;
+
+	k2 = k1;
+}
+
+template<typename T>
+inline void AVLTree<T>::rotate_R(AVLNode<T>*& k2)
+{
+	/*
+	向右旋转
+			k2
+		 /
+		k1
+	 /
+	new
+
+	*/
 	AVLNode<T> *k1 = k2->lchild;
 
 	k2->lchild = k1->rchild;
 	k1->rchild = k2;
 
-	k2->height = height(k2->lchild) - height(k2->rchild);
-	k1->height = height(k1->lchild) - height(k1->rchild);
-
 	k2 = k1;
 }
-
-template<typename T>
-inline void AVLTree<T>::rotateRR(AVLNode<T>*& k2)
-{
-	AVLNode<T> *k1 = k2->rchild;
-
-	k2->rchild = k1->lchild;
-	k1->lchild = k2;
-
-	k1->height = height(k1->lchild), height(k1->rchild);
-	k2->height = height(k2->lchild), height(k2->rchild);
-
-	k2 = k1;
-}
-
-template<typename T>
-inline void AVLTree<T>::rotateLR(AVLNode<T>*& k3)
-{
-	rotateRR(k3->lchild);
-	rotateLL(k3);
-}
-
-template<typename T>
-inline void AVLTree<T>::rotateRL(AVLNode<T>*& k3)
-{
-	rotateLL(k3->rchild);
-	rotateRR(k3);
-}
-

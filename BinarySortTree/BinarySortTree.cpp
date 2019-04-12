@@ -87,9 +87,9 @@ int main()
 
 
 	//插入260万个节点，检查性能
-	for (int i = 0; i < 2600000; i++)
+	for (int i = 0; i < 1000000; i++)
 	{
-		int newKey = rand();
+		int newKey = (rand() << 16) + rand();
 		bst.insert(newKey);
 	}
 
