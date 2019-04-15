@@ -2,11 +2,11 @@
 //
 
 /*
-哈希表(散列表)：
-需要知道记录数量的范围，数据大体上是静态的，这样才能达到最大的效率；
+哈希表(散列表，数组链表)：
+需要知道记录的大概数量，数据大体上是静态的，这样才能达到最好的查找效率；
 通过散列函数计算关键字获得地址，直接操作地址指向桶的数据；
 
-查找、插入和删除的算法复杂度都是O(1)
+查找、插入和删除的算法复杂度都是O(1)，无法做排序；
 
 散列函数设计：
 取余数法：f(key) = key mod p
@@ -25,41 +25,42 @@
 #include "Studend.h"
 #include "HashTable.h"
 
+ostream& operator << (ostream &out, Student stud)
+{
+	out << stud.getName().c_str() << ": " << stud.getSorce();
+
+	return out;
+}
+
 int main()
 {
 	int intSize = 100000;
-	HashTable<Student> ht(intSize, Student());
-	char szName[100];
 
-	//插入
-	ht["GuiQuan1"] = Student("GuiQuan1", 34, true, 80);
-	ht["GuiQuan2"] = Student("GuiQuan2", 34, true, 80);
-	ht["GuiQuan3"] = Student("GuiQuan3", 34, true, 80);
-	ht["GuiQuan4"] = Student("GuiQuan4", 34, true, 80);
+	//初始化======================================
+	HashTable<string, Student> ht(intSize);	//初始化足够大的哈希表，比较占用内存
 
+	//插入========================================
 	for (int i = 0; i < intSize; i++)
 	{
-		sprintf_s(szName, "N%i", 1234 + rand() % intSize);
+		char szName[100];
+		sprintf(szName, "N%i", intSize + i);
 
-		ht[szName] = Student(szName, 15 + rand() % 8, true, 50 + rand() % 50);
+		string strName = szName;
+
+		//ht[strName] = Student(strName.c_str(), 15 + rand() % 8, true, 50 + rand() % 50);
+
+		ht.insertData(strName, Student(strName.c_str(), 15 + rand() % 8, true, 50 + rand() % 50));
 	}
-	
-	//ht.show();
 
-	//查找
-	Student &guiquan1 = ht["GuiQuan1"];
-	Student &guiquan2 = ht["GuiQuan2"];
+	//查找========================================
+	Student &stud1 = ht["N100001"];
+	cout << stud1 << endl;
 
-	guiquan1.setSorce(99);
-	guiquan2.setSorce(100);
+	Student &stud2 = ht["N100002"];
+	cout << stud2 << endl;
 
-	Student &g1 = ht["GuiQuan1"];
-
-	//删除
-	ht.removeData("GuiQuan1");
-
-	//清除
-	ht.clearData();
+	//删除========================================
+	ht.removeData("N100001");
 
 	getchar();
     return 0;

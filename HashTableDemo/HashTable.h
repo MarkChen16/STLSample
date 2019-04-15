@@ -3,162 +3,159 @@
 
 #include <iostream>
 #include <vector>
+#include <list>
 
 using namespace std;
 
-template<class TKey>
+//散列函数
+class hashFun
+{
+public:
+	//散列函数：将关键字转换为整数
+	int operator ()(string szKey) const
+	{
+		int intRev = 0;
+
+		int varOld = 1;
+		int i = 1;
+
+		//折叠法转换为整型关键字
+		for each (auto var in szKey)
+		{
+			int tmp = var * var * varOld * i++;
+			if (0 == tmp) break;
+
+			varOld = var;
+
+			intRev += tmp;
+		}
+
+		return intRev;
+	}
+
+};
+
+//关键字比较函数
+class equalFun
+{
+public:
+	//关键字比较函数
+	bool operator ()(string key1, string key2) const
+	{
+		return key1 == key2;
+	}
+};
+
+
+template<class TKey, class TValue, class THashFun = hashFun, class TEqualFun  = equalFun>
 class HashTable
 {
 public:
-	HashTable(int num, TKey nullVal);
-	~HashTable();
+	typedef pair<TKey, TValue> HT_DATA;
 
-	TKey& operator [](TKey key)
+	HashTable(int num)
+		:arr(num, list<HT_DATA>()), intSize(num), intCount(0)
 	{
-		int index = searchData(key);
 
-		if (index >= 0 && index < size)
+	}
+
+	TValue& operator [](TKey key)
+	{
+		//计算散列值获取桶的编号
+		int intHash = THashFun()(key) % intSize;		//散列函数：取余数法
+
+		list<HT_DATA> &bucket = arr[intHash];
+
+		//遍历桶查找关键字：链地址法防冲突
+		list<HT_DATA>::iterator iter = bucket.begin();
+
+		while (iter != bucket.end())
 		{
-			//存在则返回
-			return elem[index];
+			if (TEqualFun()(key, (*iter).first))
+			{
+				return (*iter).second;
+			}
+
+			iter++;
 		}
-		else
+
+		//没有找到关键字，则插入桶
+		bucket.push_back(make_pair(key, TValue()));
+		intCount++;
+
+		return bucket.back().second;
+	}
+
+	void insertData(TKey key, TValue value)
+	{
+		//计算散列值获取桶的编号
+		int intHash = THashFun()(key) % intSize;		//散列函数：取余数法
+
+		list<HT_DATA> *bucket = &arr[intHash];
+
+		//遍历桶查找关键字
+		list<HT_DATA>::iterator iter = bucket->begin();
+
+		while (iter != bucket->end())
 		{
-			//不存在，则插入后返回
-			return elem[insertData(key)];
+			if (TEqualFun()(key, (*iter).first))
+			{
+				(*iter).second = value;
+				return;
+			}
+
+			iter++;
+		}
+
+		//没有找到关键字，则插入桶
+		bucket->push_back(make_pair(key, value));
+		intCount++;
+	}
+
+	void removeData(TKey key)
+	{
+		//计算散列值获取桶的编号
+		int intHash = THashFun()(key) % intSize;		//散列函数：取余数法
+
+		list<HT_DATA> &bucket = arr[intHash];
+
+		//遍历桶查找关键字
+		list<HT_DATA>::iterator iter = bucket.begin();
+		while (iter != bucket.end())
+		{
+			if (TEqualFun()((*iter).first, key))
+			{
+				bucket.erase(iter);
+				return;
+			}
+
+			iter++;
 		}
 	}
 
-	int searchData(TKey key);
-	int insertData(TKey key);
-	void removeData(TKey key);
-	void clearData();
+	void clearData()
+	{
+		for each (auto var in arr)
+		{
+			var.clear();
+		}
 
-	int getCount();
-	int getSize();
-	void show();
+		intCount = 0;
+	}
+
+	int getCount()
+	{
+		return intCount;
+	}
+
+	int getSize()
+	{
+		return intSize;
+	}
 
 private:
-	vector<TKey> elem;		//数据元素
-	const TKey NULL_VALUE;		//空值
-	int count;				//元素的数量
-	int size;				//表的大小
-
-	int hashFun(TKey key);	//散列函数
+	vector< list<HT_DATA> > arr;		//数据元素
+	int intCount;						//元素的数量
+	int intSize;						//表的大小
 };
 
-template<class TKey>
-inline HashTable<TKey>::HashTable(int num, TKey nullVal)
-	:elem(num, nullVal), NULL_VALUE(nullVal), count(0), size(num)
-{
-
-}
-
-template<class TKey>
-inline HashTable<TKey>::~HashTable()
-{
-}
-
-template<class TKey>
-inline int HashTable<TKey>::searchData(TKey key)
-{
-	int intHash = hashFun(key);
-	int intAddr = intHash;
-
-	while (elem[intAddr] != key)
-	{
-		intAddr = (intAddr + 1) % size;		//线性探测法处理冲突
-
-		if (elem[intAddr] == NULL_VALUE || intAddr == intHash)
-		{
-			return -1;
-		}
-	}
-
-	return intAddr;
-}
-
-template<class TKey>
-inline int HashTable<TKey>::insertData(TKey key)
-{
-	int intHash = hashFun(key);
-	int intAddr = intHash;
-
-	while (elem[intAddr] != NULL_VALUE)
-	{
-		intAddr = (intAddr + 1) % size;		//处理冲突溢出：线性探测法
-
-		//没有空间了
-		if (intAddr == intHash) return -1;
-
-		//已经存在则替换
-		if (elem[intAddr] == key)
-		{
-			elem[intAddr] = key;
-			return intAddr;
-		}
-	}
-
-	//添加新的数据
-	elem[intAddr] = key;
-	count++;
-
-	return intAddr;
-}
-
-template<class TKey>
-inline void HashTable<TKey>::removeData(TKey key)
-{
-	int index = searchData(key);
-
-	if (index >= 0)
-	{
-		elem[index] = NULL_VALUE;
-		count--;
-	}
-}
-
-template<class TKey>
-inline void HashTable<TKey>::clearData()
-{
-	for (int i = 0; i < elem.size(); i++)
-	{
-		elem[i] = NULL_VALUE;
-	}
-
-	count = 0;
-}
-
-template<class TKey>
-inline int HashTable<TKey>::getCount()
-{
-	return count;
-}
-
-template<class TKey>
-inline int HashTable<TKey>::getSize()
-{
-	return size;
-}
-
-template<class TKey>
-inline void HashTable<TKey>::show()
-{
-	for each (auto var in elem)
-	{
-		if (var == NULL_VALUE)
-		{
-			cout << "NULL" << endl;
-		}
-		else
-		{
-			cout << (const char *)var << endl;
-		}
-	}
-}
-
-template<class TKey>
-inline int HashTable<TKey>::hashFun(TKey key)
-{
-	return key % size;	//散列函数：除留余数法
-}
