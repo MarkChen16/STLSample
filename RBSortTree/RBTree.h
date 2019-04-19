@@ -15,23 +15,37 @@ class RBTree
 public:
 	struct iterator;
 
-	RBTree():mRoot(nullptr), mHot(nullptr), mSize(0){}
+	RBTree():mRoot(nullptr), mHot(nullptr), mSize(0)
+	{
+	}
+
+	~RBTree()
+	{
+		clear();
+	}
 
 	//查找、插入、删除
 	iterator search(T v);
 	iterator insert(T v);
 	bool remove(T v);
-	bool remove(iterator iter);
+	bool remove(iterator &iter);
 
-	//获得范围
-	iterator lower_bound(T v);
-	iterator upper_bound(T v);
+	//获得最大值和最小值
+	iterator minValue();
+	iterator maxValue();
+
+	//获得区间范围
+	iterator lower_bound(T v);		//返回不小于v的迭代器
+	iterator upper_bound(T v);		//返回大于v的迭代器
 
 	//清除整棵树
 	void clear();
 
 	//返回树的大小
 	int size();
+
+	//返回树的高
+	int heigh();
 
 	//返回是否为空树
 	bool empty();
@@ -56,8 +70,9 @@ protected:
 
 	RB_Node *find(T v);	//查找节点
 
-	void removeTree(RB_Node *);		//删除树(dfs后序遍历)
+	int heigh(RB_Node *p, int intHeigh);	//计算树的高
 
+	void removeTree(RB_Node * &p);		//删除树(dfs后序遍历)
 
 private:
 
@@ -83,6 +98,7 @@ struct RBTree<T>::RB_Node
 	//找出真后继(简化后继函数，删除时使用)
 	RB_Node *succ()
 	{
+		//找出右子树最靠左的节点
 		RB_Node *ptn = rc;
 		if (ptn == nullptr) return ptn;
 
@@ -94,14 +110,14 @@ struct RBTree<T>::RB_Node
 		return ptn;
 	}
 
-	//找出前继
+	//找出前继(迭代器使用)
 	RB_Node *leftNode()
 	{
 		RB_Node *ptn = this;
 
 		if (lc == nullptr)
 		{
-			//没有左节点：找到自己是父节点的右孩子
+			//没有左节点：向上查找右孩子是自己的父节点
 			while (ptn->ftr != nullptr && ptn->ftr->lc == ptn)
 			{
 				ptn = ptn->ftr;
@@ -111,7 +127,7 @@ struct RBTree<T>::RB_Node
 		}
 		else
 		{
-			//如果有左节点
+			//如果有左节点：向下查找左子树最靠的节点
 			ptn = ptn->lc;
 			while (ptn->rc != nullptr)
 			{
@@ -122,14 +138,14 @@ struct RBTree<T>::RB_Node
 		return ptn;
 	}
 
-	//找出后继
+	//找出后继(迭代器使用)
 	RB_Node *rightNode()
 	{
 		RB_Node *ptn = this;
 
 		if (rc == nullptr)
 		{
-			//没有右节点：找到自己是父节点的右孩子
+			//没有右孩节点：找到左孩子是自己的父节点
 			while (ptn->ftr != nullptr && ptn->ftr->rc == ptn)
 			{
 				ptn = ptn->ftr;
@@ -139,7 +155,7 @@ struct RBTree<T>::RB_Node
 		}
 		else
 		{
-			//如果有左节点
+			//如果有右孩节点：向下找出右子树最靠左的节点
 			ptn = ptn->rc;
 			while (ptn->lc != nullptr)
 			{
@@ -160,12 +176,11 @@ protected:
 
 public:
 	iterator(RB_Node * p = nullptr) :realNode(p) {}
-	iterator(T const& val) :realNode(find(val)) {}
-	iterator(iterator const& iter) :realNode(iter->realNode) {}
+	iterator(iterator const& iter) :realNode(iter.realNode) {}
 
 	iterator& operator =(iterator const& iter)
 	{
-		realNode = iter->realNode;
+		realNode = iter.realNode;
 		return *this;
 	}
 
@@ -176,7 +191,12 @@ public:
 
 	bool operator ==(iterator const& iter)
 	{
-		return realNode == iter->realNode;
+		return realNode == iter.realNode;
+	}
+
+	bool operator !=(iterator const& iter)
+	{
+		return realNode != iter.realNode;
 	}
 
 	bool operator !()
@@ -184,15 +204,15 @@ public:
 		return !realNode;
 	}
 
-	iterator& operator ++()
+	iterator& operator ++(int)
 	{
-		realNode = realNode->rightNode();
+		if (realNode != nullptr) realNode = realNode->rightNode();
 		return *this;
 	}
 
-	iterator& operator --()
+	iterator& operator --(int)
 	{
-		realNode = realNode->leftNode();
+		if (realNode != nullptr) realNode = realNode->leftNode();
 		return *this;
 	}
 };
@@ -200,7 +220,7 @@ public:
 template<class T>
 inline void RBTree<T>::init(T v)
 {
-	//性质一：根节点是黑色的
+	//插入第一个节点，设置为黑色
 	mRoot = new RB_Node(v, RB_COLOR_BLACK);
 	mSize = 1;
 }
@@ -272,8 +292,8 @@ inline void RBTree<T>::SolveDoubleRed(RB_Node *nn)
 {
 	//双红修正
 	//RR-0 (没有出现双红)
-	//RR-1（父亲是红色，出现双红，叔叔是黑色，LL和RR旋转一下，染色两次；LR和RL旋转两次，染色两次）
-	//RR-2（父亲是红色，出现双红，叔叔是红色，染色三次，向上递归爷爷节点）
+	//RR-1（父亲是红色，LL和RR旋转一下，染色两次；LR和RL旋转两次，染色两次）
+	//RR-2（父亲是红色，叔叔不为空且是红色，染色三次，向上递归爷爷节点）
 	while ( (nn->ftr != nullptr) && nn->ftr->rbc == RB_COLOR_RED )	//排除递归到根和RR-0情况
 	{
 		RB_Node *pFtr = nn->ftr;		//父节点
@@ -285,7 +305,7 @@ inline void RBTree<T>::SolveDoubleRed(RB_Node *nn)
 			//RR-2情况：染色三次
 			pFtr->rbc = RB_COLOR_BLACK;		//染黑父亲
 			pUncle->rbc = RB_COLOR_BLACK;	//染黑叔叔
-			pGftr->rbc = RB_COLOR_RED;		//当红爷爷
+			pGftr->rbc = RB_COLOR_RED;		//染红爷爷
 
 			nn = pGftr;						//从爷爷开始递归，重复以上操作
 		}
@@ -363,6 +383,117 @@ inline void RBTree<T>::SolveDoubleRed(RB_Node *nn)
 }
 
 template<class T>
+inline void RBTree<T>::SolveLostBlack(RB_Node *nn)
+{
+	while (nn != mRoot) {
+		RB_Node* pftr = nn->ftr;
+		RB_Node* bthr = bro(nn);
+
+		//LB-1：判断兄弟是否红色
+		if (bthr->rbc == RB_COLOR_RED) 
+		{
+			//LB-1
+			bthr->rbc = RB_COLOR_BLACK;
+			pftr->rbc = RB_COLOR_RED;
+
+			if (mRoot == pftr) 
+			{
+				mRoot = bthr;
+			}
+
+			if (pftr->lc == nn) 
+			{
+				zag(pftr);
+			}
+			else 
+			{
+				zig(pftr);
+			}
+
+			//重新赋值兄弟和父亲节点继续递归
+			bthr = bro(nn);
+			pftr = nn->ftr;
+		}
+
+		//LB-3：是否有红色侄子
+		if (bthr->lc && bthr->lc->rbc == RB_COLOR_RED)
+		{
+			//LB-3
+			RB_COLOR oldRBc = pftr->rbc;
+			pftr->rbc = RB_COLOR_BLACK;
+
+			if (pftr->lc == nn) 
+			{
+				//近侄子
+				if (mRoot == pftr)
+				{
+					mRoot = bthr->lc;
+				}
+
+				zig(bthr); zag(pftr);
+			}
+			else 
+			{
+				//远侄子
+				bthr->lc->rbc = RB_COLOR_BLACK;
+				if (mRoot == pftr)
+				{
+					mRoot = bthr;
+				}
+
+				zig(pftr);
+			}
+
+			pftr->ftr->rbc = oldRBc;
+			return;
+		}
+		else if (bthr->rc && bthr->rc->rbc == RB_COLOR_RED)
+		{
+			//LB-3
+			RB_COLOR oldRBc = pftr->rbc;
+			pftr->rbc = RB_COLOR_BLACK;
+
+			if (pftr->lc == nn) 
+			{
+				bthr->rc->rbc = RB_COLOR_BLACK;
+				if (mRoot == pftr)
+				{
+					mRoot = bthr;
+				}
+
+				zag(pftr);
+			}
+			else 
+			{
+				if (mRoot == pftr)
+				{
+					mRoot = bthr->rc;
+				}
+
+				zag(bthr); zig(pftr);
+			}
+
+			pftr->ftr->rbc = oldRBc;
+			return;
+		}
+
+		if (pftr->rbc == RB_COLOR_RED)
+		{
+			//LB-2R：父亲是红色
+			bthr->rbc = RB_COLOR_RED;
+			pftr->rbc = RB_COLOR_BLACK;
+			return;
+		}
+		else 
+		{
+			//LB-2B：父亲是黑色，兄弟也是黑色
+			bthr->rbc = RB_COLOR_RED;
+			nn = pftr;
+		}
+	}
+}
+
+template<class T>
 	typename
 inline RBTree<T>::RB_Node * RBTree<T>::find(T v)
 {
@@ -386,6 +517,30 @@ inline RBTree<T>::RB_Node * RBTree<T>::find(T v)
 }
 
 template<class T>
+inline int RBTree<T>::heigh(RB_Node * p, int intHeigh)
+{
+	if (nullptr != p) intHeigh++;
+	else return intHeigh;
+
+	int h1 = heigh(p->lc, intHeigh);
+	int h2 = heigh(p->rc, intHeigh);
+
+	return h1 > h2 ? h1 : h2;
+}
+
+template<class T>
+inline void RBTree<T>::removeTree(RB_Node * &p)
+{
+	if (p == nullptr) return;
+
+	if (p->lc != nullptr) removeTree(p->lc);
+	if (p->rc != nullptr) removeTree(p->rc);
+
+	delete p;
+	p = nullptr;
+}
+
+template<class T>
 	typename
 inline RBTree<T>::iterator RBTree<T>::search(T v)
 {
@@ -396,6 +551,7 @@ template<class T>
 	typename
 inline RBTree<T>::iterator RBTree<T>::insert(T v)
 {
+	//查找是否已经存在
 	RB_Node *ptn = find(v);
 
 	if (ptn != nullptr)
@@ -410,7 +566,7 @@ inline RBTree<T>::iterator RBTree<T>::insert(T v)
 		return iterator(mRoot);
 	}
 
-	//当红节点插入到其他位置，并做双红修正
+	//作为红色节点插入到其他位置，并做双红修正
 	mSize++;
 	ptn = new RB_Node(v, RB_COLOR_RED, mHot);
 
@@ -425,6 +581,164 @@ inline RBTree<T>::iterator RBTree<T>::insert(T v)
 
 	//双红修正
 	SolveDoubleRed(ptn);
+
+	return iterator(ptn);
+}
+
+template<class T>
+inline bool RBTree<T>::remove(T v)
+{
+	RB_Node* ptn = find(v);
+	RB_Node* node_suc = nullptr;
+
+	//没有找到
+	if (ptn == nullptr) 
+	{
+		return false;
+	}
+
+	//查找真后继
+	while (ptn->lc || ptn->rc) 
+	{
+		if (!(ptn->lc)) 
+		{
+			node_suc = ptn->rc;
+		}
+		else if (!(ptn->rc)) 
+		{
+			node_suc = ptn->lc;
+		}
+		else
+		{
+			node_suc = ptn->succ();
+		}
+
+		ptn->val = node_suc->val;	//替换为后继的值
+		ptn = node_suc;				//后继作为删除的节点
+	}
+
+	if (ptn->rbc == RB_COLOR_BLACK) 
+	{
+		//如果删除的节点是黑色的，处理失黑修正
+		SolveLostBlack(ptn);
+	}
+
+	//设置父节点的左孩或右孩为空
+	if (ptn->ftr)
+	{
+		if (ptn->ftr->lc == ptn) 
+		{
+			ptn->ftr->lc = NULL;
+		}
+		else
+		{
+			ptn->ftr->rc = NULL;
+		}
+	}
+
+	//判断是否根节点
+	if (mRoot == ptn) 
+	{
+		mRoot = NULL;
+	}
+	
+	delete ptn;
+	--mSize;
+
+	return true;
+}
+
+template<class T>
+inline bool RBTree<T>::remove(iterator &iter)
+{
+	RB_Node* ptn = iter.realNode;
+	RB_Node* node_suc = nullptr;
+
+	//迭代器指向NULL
+	if (ptn == nullptr)
+	{
+		return false;
+	}
+
+	//修改迭代器指向下一个节点，没有的话，则指向上一个节点
+	iter.realNode = ptn->right_node();
+	if (!(iter.realNode)) 
+	{
+		iter.realNode = ptn->left_node();
+	}
+
+	//查找后继或者前驱
+	while (ptn->lc || ptn->rc) 
+	{
+		if (!(ptn->lc)) 
+		{
+			node_suc = ptn->rc;
+		}
+		else if (!(ptn->rc))
+		{
+			node_suc = ptn->lc;
+		}
+		else 
+		{
+			node_suc = ptn->succ();
+		}
+
+		ptn->val = node_suc->val;
+		ptn = node_suc;
+	}
+
+	//失黑修正
+	if (ptn->rbc == RB_COLOR_BLACK) {
+		SolveLostBlack(ptn);
+	}
+
+	//设置父节点的左孩或右孩为空
+	if (ptn->ftr) 
+	{
+		if (ptn->ftr->lc == ptn)
+		{
+			ptn->ftr->lc = NULL;
+		}
+		else
+		{
+			ptn->ftr->rc = NULL;
+		}
+	}
+
+	//判断是否根节点
+	if (mRoot == ptn) 
+	{
+		mRoot = NULL;
+	}
+
+	delete ptn;
+	mSize--;
+
+	return true;
+}
+
+template<class T>
+	typename
+inline RBTree<T>::iterator RBTree<T>::minValue()
+{
+	RB_Node *ptn = mRoot;
+	while (ptn->lc != nullptr)
+	{
+		ptn = ptn->lc;
+	}
+
+	return iterator(ptn);
+}
+
+template<class T>
+	typename
+inline RBTree<T>::iterator RBTree<T>::maxValue()
+{
+	RB_Node *ptn = mRoot;
+	while (ptn->rc != nullptr)
+	{
+		ptn = ptn->rc;
+	}
 
 	return iterator(ptn);
 }
@@ -449,13 +763,16 @@ inline RBTree<T>::iterator RBTree<T>::lower_bound(T v)
 		}
 	}
 
-	if (mHot->val >= v)
+	if (mHot != nullptr)
 	{
-		ptn = mHot;
-	}
-	else
-	{
-		ptn = mHot->rightNode();
+		if (mHot->val >= v)
+		{
+			ptn = mHot;
+		}
+		else
+		{
+			ptn = mHot->rightNode();
+		}
 	}
 
 	return iterator(ptn);
@@ -481,15 +798,65 @@ inline RBTree<T>::iterator RBTree<T>::upper_bound(T v)
 		}
 	}
 
-	if (mHot->val > v)
+	if (mHot != nullptr)
 	{
-		ptn = mHot;
-	}
-	else
-	{
-		ptn = mHot->rightNode();
+		if (mHot->val > v)
+		{
+			ptn = mHot;
+		}
+		else
+		{
+			ptn = mHot->rightNode();
+		}
 	}
 
 	return iterator(ptn);
+}
+
+template<class T>
+inline void RBTree<T>::clear()
+{
+	removeTree(mRoot);
+	mHot = nullptr;
+	mSize = 0;
+}
+
+template<class T>
+inline int RBTree<T>::size()
+{
+	return mSize;
+}
+
+template<class T>
+inline int RBTree<T>::heigh()
+{
+	return heigh(mRoot, 0);
+}
+
+template<class T>
+inline bool RBTree<T>::empty()
+{
+	return mSize == 0;
+}
+
+template<class T>
+	typename
+inline RBTree<T>::iterator RBTree<T>::begin()
+{
+	//找出最左的节点
+	RB_Node *ptn = mRoot;
+	while (ptn->lc != nullptr)
+	{
+		ptn = ptn->lc;
+	}
+
+	return iterator(ptn);
+}
+
+template<class T>
+	typename
+inline RBTree<T>::iterator RBTree<T>::end()
+{
+	return iterator(nullptr);
 }
 
